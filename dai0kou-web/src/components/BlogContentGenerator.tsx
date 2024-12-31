@@ -3,8 +3,13 @@
 import { useState } from 'react'
 import { Toggle } from '@/components/ui/Toggle'
 import { Button } from "@/components/ui/button"
-import { Textarea } from "@/components/ui/textarea"
+// import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
+import dynamic from 'next/dynamic'
+import ReactMarkdown from 'react-markdown'
+import 'easymde/dist/easymde.min.css'
+
+const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false })
 
 export function BlogContentGenerator() {
   const [input, setInput] = useState('')
@@ -15,7 +20,7 @@ export function BlogContentGenerator() {
     option4: false,
   })
   const [draft, setDraft] = useState('');
-  // const [messages, setMessages] = useState<{ user: string; text: string }[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
 
   const handleOptionChange = (option: keyof typeof options) => (checked: boolean) => {
     setOptions(prev => ({ ...prev, [option]: checked }))
@@ -23,7 +28,6 @@ export function BlogContentGenerator() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // setMessages((prev) => [...prev, { user: "You", text: message }]);
 
     const response = await fetch('/api/writer', {
       method: 'POST',
@@ -32,11 +36,9 @@ export function BlogContentGenerator() {
       // body: JSON.stringify({ input, options }),
     })
     const data = await response.json()
-    console.log(data)
     const data2 = data.response;
     const aiResponse =
       JSON.parse(data2).candidates?.[0]?.content?.parts?.[0]?.text || "AIからの応答がありません。";
-    console.log(aiResponse)
     setDraft(aiResponse)
   }
 
@@ -46,7 +48,7 @@ export function BlogContentGenerator() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-4 space-y-6">
+    <div className="max-w-4xl mx-auto p-4 space-y-6">
       <h1 className="text-2xl font-bold mb-4">Blog Content Generator</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
@@ -64,12 +66,28 @@ export function BlogContentGenerator() {
         </div>
         <Button type="submit" className="w-full">Generate Draft</Button>
       </form>
-      <Textarea
-        value={draft}
-        onChange={(e) => setDraft(e.target.value)}
-        placeholder="Generated draft will appear here"
-        className="w-full h-64"
-      />
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-xl font-semibold">Draft</h2>
+          <Button onClick={() => setIsEditing(!isEditing)}>
+            {isEditing ? 'Preview' : 'Edit'}
+          </Button>
+        </div>
+        {isEditing ? (
+          <SimpleMDE
+            value={draft}
+            onChange={setDraft}
+            options={{
+              spellChecker: false,
+              placeholder: "Start editing your draft here...",
+            }}
+          />
+        ) : (
+          <div className="prose max-w-none">
+            <ReactMarkdown>{draft}</ReactMarkdown>
+          </div>
+        )}
+      </div>
       <Button onClick={handlePost} className="w-full" disabled={!draft}>Post</Button>
     </div>
   )
