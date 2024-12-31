@@ -14,7 +14,8 @@ export function BlogContentGenerator() {
     option3: false,
     option4: false,
   })
-  const [draft, setDraft] = useState('')
+  const [draft, setDraft] = useState('');
+  // const [messages, setMessages] = useState<{ user: string; text: string }[]>([]);
 
   const handleOptionChange = (option: keyof typeof options) => (checked: boolean) => {
     setOptions(prev => ({ ...prev, [option]: checked }))
@@ -22,14 +23,21 @@ export function BlogContentGenerator() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Mock server call
-    const response = await fetch('/api/generate-draft', {
+    // setMessages((prev) => [...prev, { user: "You", text: message }]);
+
+    const response = await fetch('/api/writer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ input, options }),
+      body: JSON.stringify({ message: input }),
+      // body: JSON.stringify({ input, options }),
     })
     const data = await response.json()
-    setDraft(data.draft)
+    console.log(data)
+    const data2 = data.response;
+    const aiResponse =
+      JSON.parse(data2).candidates?.[0]?.content?.parts?.[0]?.text || "AIからの応答がありません。";
+    console.log(aiResponse)
+    setDraft(aiResponse)
   }
 
   const handlePost = () => {

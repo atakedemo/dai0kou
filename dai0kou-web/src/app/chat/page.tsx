@@ -19,9 +19,8 @@ export default function Page() {
         body: JSON.stringify({ message }),
       });
       const data = await response.json();
+      console.log(data)
       const data2 = data.response;
-      console.log(data2)
-      console.log(typeof(data2))
       const aiResponse =
         JSON.parse(data2).candidates?.[0]?.content?.parts?.[0]?.text || "AIからの応答がありません。";
       console.log(aiResponse)
