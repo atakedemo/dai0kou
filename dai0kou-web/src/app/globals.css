@@ -76,11 +76,11 @@
 }
 
 .EasyMDEContainer {
-  @apply w-full;
+  @apply w-full h-full;
 }
 
 .EasyMDEContainer .CodeMirror {
-  @apply border border-gray-300 rounded-md;
+  @apply border border-gray-300 rounded-md h-full;
 }
 
 .EasyMDEContainer .editor-toolbar {
@@ -109,4 +109,16 @@
 
 .prose a {
   @apply text-blue-600 hover:underline;
+}
+
+.slide-button {
+  transition: left 0.3s ease-in-out;
+}
+
+.slide-button-closed {
+  left: -1.5rem;
+}
+
+.slide-button-open {
+  left: 0;
 }
