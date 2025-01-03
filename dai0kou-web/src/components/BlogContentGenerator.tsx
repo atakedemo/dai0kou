@@ -9,6 +9,8 @@ import ReactMarkdown from 'react-markdown'
 import 'easymde/dist/easymde.min.css'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ChevronRight, ChevronLeft } from 'lucide-react'
+import { LoginButton } from './LoginButton'
+import { useAuth } from '@/contexts/AuthContext'
 
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false })
 
@@ -21,7 +23,8 @@ export function BlogContentGenerator() {
     option4: false,
   })
   const [draft, setDraft] = useState('');
-  const [isRightSideOpen, setIsRightSideOpen] = useState(true)
+  const [isRightSideOpen, setIsRightSideOpen] = useState(true);
+  const { user, loading } = useAuth();
 
   const handleOptionChange = (option: keyof typeof options) => (checked: boolean) => {
     setOptions(prev => ({ ...prev, [option]: checked }))
@@ -47,11 +50,27 @@ export function BlogContentGenerator() {
     console.log('Posting content:', draft)
   }
 
+  if (loading) {return <div>Loading...</div>}
+  if (!user) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Blog Content Generator</h1>
+          <p className="mb-4">Please log in to use the generator.</p>
+          <LoginButton />
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Left side */}
       <div className="w-full md:w-1/2 p-4 overflow-y-auto">
-        <h1 className="text-2xl font-bold mb-4">Blog Content Generator</h1>
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-2xl font-bold">Blog Content Generator</h1>
+          <LoginButton />
+        </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             type="text"
