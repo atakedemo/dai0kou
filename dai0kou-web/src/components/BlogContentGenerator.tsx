@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input"
 import dynamic from 'next/dynamic'
 import ReactMarkdown from 'react-markdown'
 import 'easymde/dist/easymde.min.css'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { LoginButton } from './LoginButton'
 import { useAuth } from '@/contexts/AuthContext'
+import { getRepository } from '@/lib/github'
 
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false })
 
@@ -24,7 +25,7 @@ export function BlogContentGenerator() {
   })
   const [draft, setDraft] = useState('');
   const [isRightSideOpen, setIsRightSideOpen] = useState(true);
-  const { user, loading } = useAuth();
+  const { user, loading, accessToken } = useAuth();
 
   const handleOptionChange = (option: keyof typeof options) => (checked: boolean) => {
     setOptions(prev => ({ ...prev, [option]: checked }))
@@ -32,7 +33,9 @@ export function BlogContentGenerator() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
+    
+    const repos = await getRepository(accessToken as string);
+    console.log(repos);
     const response = await fetch('/api/writer', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -47,7 +50,8 @@ export function BlogContentGenerator() {
   }
 
   const handlePost = () => {
-    console.log('Posting content:', draft)
+    console.log('Posting content:', draft);
+    
   }
 
   if (loading) {return <div>Loading...</div>}

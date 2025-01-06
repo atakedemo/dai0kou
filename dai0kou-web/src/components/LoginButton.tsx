@@ -1,49 +1,48 @@
 'use client'
 
-import { useState } from 'react'
-import { signInWithPopup, GithubAuthProvider } from 'firebase/auth'
-import { auth } from '@/lib/firebase'
-import { Button } from '@/components/ui/button'
-import { useAuth } from '@/contexts/AuthContext'
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function LoginButton() {
-  const [loading, setLoading] = useState(false)
-  const { user } = useAuth()
+  const { user, loading, loginWithGitHub, logout, accessToken } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    setLoading(true)
+    setIsLoading(true);
     try {
-      const provider = new GithubAuthProvider()
-      await signInWithPopup(auth, provider)
+      await loginWithGitHub();
+      console.log('accessToekn:', accessToken);
     } catch (error) {
-      console.error('Error signing in with GitHub:', error)
+      console.error(error);
     } finally {
-      setLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   const handleLogout = async () => {
-    setLoading(true)
+    setIsLoading(true);
     try {
-      await auth.signOut()
+      await logout();
+      console.log('Logout!!!');
     } catch (error) {
-      console.error('Error signing out:', error)
+      console.error(error);
     } finally {
-      setLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   if (user) {
     return (
-      <Button onClick={handleLogout} disabled={loading}>
-        {loading ? 'Logging out...' : 'Logout'}
+      <Button onClick={handleLogout} disabled={loading || isLoading}>
+        {loading || isLoading ? 'Logging out...' : 'Logout'}
       </Button>
-    )
+    );
   }
 
   return (
-    <Button onClick={handleLogin} disabled={loading}>
-      {loading ? 'Logging in...' : 'Login with GitHub'}
+    <Button onClick={handleLogin} disabled={loading || isLoading}>
+      {loading || isLoading ? 'Logging in...' : 'Login with GitHub'}
     </Button>
-  )
+  );
 }
