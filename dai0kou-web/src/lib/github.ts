@@ -3,11 +3,11 @@ export async function getRepository(accessToken: string) {
         console.log('Access-token is required');
     }
   
-    const response = await fetch('https://api.github.com/user/repos', {
+    const response = await fetch('https://api.github.com/user/repos?direction=dsc', {
         headers: {
             Authorization: `Bearer ${accessToken}`,
             Accept: 'application/vnd.github+json',
-            'X-GitHub-Api-Version': '2022-11-28'
+            'X-GitHub-Api-Version': '2022-11-28',
         },
     });
   
@@ -40,23 +40,49 @@ export async function commitFile(
     repo: string,
     filePath: string,
     content: string,
-    message: string
+    message: string,
+    branch = "main"
 ) {
-    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`, {
-    method: 'PUT',
-    headers: {
-        Authorization: `token ${accessToken}`,
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        message,
-        content: Buffer.from(content).toString('base64'), // Base64エンコードが必要
-    }),
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
+
+    // 既存ファイルのSHAを取得
+    let sha = null;
+    try {
+        const existingFileResponse = await fetch(url, {
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/vnd.github+json',
+                'X-GitHub-Api-Version': '2022-11-28',
+            },
+        });
+        console.log(existingFileResponse)
+        if (existingFileResponse.ok) {
+            const existingFile = await existingFileResponse.json();
+            sha = existingFile.sha;
+        }
+    } catch (error) {
+        console.log("既存ファイルの取得に失敗:", error);
+    }
+
+    // ファイルを作成または更新
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28',
+        },
+        body: JSON.stringify({
+            message,
+            content: Buffer.from(content).toString('base64'), // Base64エンコード
+            branch,
+            ...(sha && { sha }), // SHAが存在する場合のみ追加
+        }),
     });
 
     if (!response.ok) {
-    throw new Error('ファイルのコミット失敗したで...');
+        throw new Error(`ファイルのコミット失敗: ${response.statusText}`);
     }
 
     return await response.json();
-}  
+} 

@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ChevronRight, ChevronLeft } from 'lucide-react'
 import { LoginButton } from './LoginButton'
 import { useAuth } from '@/contexts/AuthContext'
-import { getRepository } from '@/lib/github'
+import { getRepository, commitFile } from '@/lib/github'
 
 const SimpleMDE = dynamic(() => import('react-simplemde-editor'), { ssr: false })
 
@@ -50,8 +50,25 @@ export function BlogContentGenerator() {
   }
 
   const handlePost = () => {
-    console.log('Posting content:', draft);
-    
+    console.log('Posting content:', draft); 
+  }
+
+  const content = `
+  # My Awesome Project
+
+  This is a sample project to demonstrate how to upload markdown files using GitHub API.
+  `;
+
+  const testHandlePost = () => {
+    getRepository(accessToken as string);
+    commitFile(
+      accessToken as string,
+      'atakedemo',
+      'zenn-doc-bamb00',
+      'articles/README.md',
+      content,
+      'testCommit'
+    )
   }
 
   if (loading) {return <div>Loading...</div>}
@@ -128,6 +145,7 @@ export function BlogContentGenerator() {
               </TabsContent>
             </Tabs>
             <Button onClick={handlePost} className="w-full mt-4" disabled={!draft}>Post</Button>
+            <Button onClick={testHandlePost} className="w-full mt-4">Test Post</Button>
           </div>
         </div>
       </div>

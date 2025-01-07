@@ -44,6 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       const provider = new GithubAuthProvider();
+      provider.addScope('repo');
+      provider.addScope('write:repo_hook'); 
       const result = await signInWithPopup(auth, provider);
       const credential = GithubAuthProvider.credentialFromResult(result);
 
