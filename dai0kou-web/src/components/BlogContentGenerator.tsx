@@ -26,12 +26,14 @@ export function BlogContentGenerator() {
   const [draft, setDraft] = useState('');
   const [isRightSideOpen, setIsRightSideOpen] = useState(true);
   const { user, loading, accessToken } = useAuth();
+  const [drafting, setDrafting] = useState(false);
 
   const handleOptionChange = (option: keyof typeof options) => (checked: boolean) => {
     setOptions(prev => ({ ...prev, [option]: checked }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
+    setDrafting(true);
     e.preventDefault()
     
     const repos = await getRepository(accessToken as string);
@@ -42,22 +44,18 @@ export function BlogContentGenerator() {
       body: JSON.stringify({ message: input }),
       // body: JSON.stringify({ input, options }),
     })
+
     const data = await response.json()
     const data2 = data.response;
     const aiResponse =
       JSON.parse(data2).candidates?.[0]?.content?.parts?.[0]?.text || "AIからの応答がありません。";
-    setDraft(aiResponse)
+    setDraft(aiResponse);
+    setDrafting(false);
   }
 
   const handlePost = () => {
     console.log('Posting content:', draft); 
   }
-
-  const content = `
-  # My Awesome Project
-
-  This is a sample project to demonstrate how to upload markdown files using GitHub API.
-  `;
 
   const testHandlePost = () => {
     getRepository(accessToken as string);
@@ -66,7 +64,7 @@ export function BlogContentGenerator() {
       'atakedemo',
       'zenn-doc-bamb00',
       'articles/README.md',
-      content,
+      draft,
       'testCommit'
     )
   }
@@ -122,28 +120,34 @@ export function BlogContentGenerator() {
             {isRightSideOpen ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </Button>
           <div className={`p-4 h-full overflow-y-auto ${isRightSideOpen ? 'opacity-100' : 'opacity-0'} transition-opacity duration-300`}>
-            <h2 className="text-xl font-semibold mb-4">Draft</h2>
-            <Tabs defaultValue="preview" className="w-full h-[calc(100%-8rem)]">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="preview">Preview</TabsTrigger>
-                <TabsTrigger value="edit">Edit</TabsTrigger>
-              </TabsList>
-              <TabsContent value="preview" className="h-full overflow-y-auto">
-                <div className="prose max-w-none p-4 border rounded-md bg-white">
-                  <ReactMarkdown>{draft}</ReactMarkdown>
-                </div>
-              </TabsContent>
-              <TabsContent value="edit" className="h-full">
-                <SimpleMDE
-                  value={draft}
-                  onChange={setDraft}
-                  options={{
-                    spellChecker: false,
-                    placeholder: "Start editing your draft here...",
-                  }}
-                />
-              </TabsContent>
-            </Tabs>
+            {drafting ? 
+              <div className="flex justify-center" aria-label="Drafting">
+                <h2 className="text-xl font-semibold mb-4">Drafting...</h2>
+                <div className="animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+              </div>
+              :
+              <Tabs defaultValue="preview" className="w-full h-[calc(100%-8rem)]">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="preview">Preview</TabsTrigger>
+                  <TabsTrigger value="edit">Edit</TabsTrigger>
+                </TabsList>
+                <TabsContent value="preview" className="h-full overflow-y-auto">
+                  <div className="prose max-w-none p-4 border rounded-md bg-white">
+                    <ReactMarkdown>{draft}</ReactMarkdown>
+                  </div>
+                </TabsContent>
+                <TabsContent value="edit" className="h-full">
+                  <SimpleMDE
+                    value={draft}
+                    onChange={setDraft}
+                    options={{
+                      spellChecker: false,
+                      placeholder: "Start editing your draft here...",
+                    }}
+                  />
+                </TabsContent>
+              </Tabs>
+            }
             <Button onClick={handlePost} className="w-full mt-4" disabled={!draft}>Post</Button>
             <Button onClick={testHandlePost} className="w-full mt-4">Test Post</Button>
           </div>
