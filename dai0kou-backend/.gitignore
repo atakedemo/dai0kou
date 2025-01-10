@@ -1,3 +1,4 @@
 functions.zip
 ./functions.zip
 *.zip
+./.terraform
