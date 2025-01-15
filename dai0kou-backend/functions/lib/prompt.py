@@ -60,9 +60,43 @@ def generateContents(thema, additional, stage, digest):
     for response in responses:
         res_text = res_text + response.text + '\n'
         
-    return res_text
+    return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
 
 def generateContentsInit(thema, additional):
     print('s')
     contetns = 's'
     return contetns
+
+def generateContentsFromPdf(file_uri, additional, stage, digest):
+    text = f"""
+    与えられたファイルの内容を、わかりやすく説明するブログを作成して
+
+    尚、下記内容を含むようにして
+    {additional}
+
+    また、これまで{str(stage-1)}回投稿しており、下記内容は投稿済みであることも留意して
+    {digest}
+    """
+    print("Generation start!!!")
+
+    request = {
+        'contents': [
+            {'role': 'user', 'parts': [text]}
+        ],
+    }
+    vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
+    model = GenerativeModel("gemini-1.5-flash-001",)
+    pdf_file = Part.from_uri(
+        uri=file_uri,
+        mime_type="application/pdf",
+    )
+    contents = [pdf_file, text]
+    response = model.generate_content(contents)
+
+    print("Generation finished!!!")
+    
+    # res_json = response.json()
+    res_text = response.text
+    print(res_text)
+    
+    return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
