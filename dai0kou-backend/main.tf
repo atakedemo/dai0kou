@@ -16,16 +16,23 @@ resource "google_storage_bucket_object" "function_zip" {
 }
 
 resource "google_cloudfunctions_function" "python_function" {
-  name        = "hello-world-function"
+  name        = "dai0kou-blog-function"
   description = "A simple Python Cloud Function"
   runtime     = "python311"
-  entry_point = "hello_world"
+  entry_point = "post_blog"
   region      = var.region
 
   source_archive_bucket = google_storage_bucket.source_bucket.name
   source_archive_object = google_storage_bucket_object.function_zip.name
 
   trigger_http = true
+
+  available_memory_mb = 512
+  timeout = 90
+
+  depends_on = [
+    google_storage_bucket_object.function_zip
+  ]
 
   environment_variables = {
     ENV_VAR = "example_value"
