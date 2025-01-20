@@ -6,7 +6,7 @@ import React, { useState } from "react";
 import Sidebar from "@/components/ui/sidebar";
 
 export default function Home() {
-  const [selectedContent, setSelectedContent] = useState<string>("ホーム");
+  const [selectedContent, setSelectedContent] = useState<string>("");
 
   // サイドバーのアイテムを定義
   const sidebarItems = ["ホーム", "設定"];
@@ -16,14 +16,16 @@ export default function Home() {
   const renderContent = () => {
     switch (selectedContent) {
       case "ホーム":
-        return <FirstForm />;
+        return <p>ホーム画面</p>;
       case "設定":
         return <p>ここで設定を変更できるんや。</p>;
+      case "new_project":
+        return <FirstForm />
       default:
         if (selectedContent=="XXX"){
           return selectedContent
         } else {
-          return <p>選択肢が見つからへんで。</p>;
+          return <FirstForm />;
         }
     }
   };
@@ -36,7 +38,6 @@ export default function Home() {
 
         {/* メインコンテンツ */}
         <main className="flex-1 p-4">
-          <h1 className="text-2xl font-bold">{selectedContent}</h1>
           {renderContent()}
         </main>
       </div>

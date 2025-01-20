@@ -1,4 +1,5 @@
 import React from "react";
+import { LuPlus } from "react-icons/lu";
 
 type SidebarProps = {
   items: string[];
@@ -36,6 +37,15 @@ const Sidebar: React.FC<SidebarProps> = ({ items, projects, onSelect }) => {
           </li>
         ))}
       </ul>
+      <li>
+        <button
+          onClick={() => onSelect("new_project")}
+          className="text-sm rounded px-5 py-3 text-left hover:bg-gray-700"
+        >
+          <LuPlus />
+          新しい投稿セットを作る
+        </button>
+      </li>
     </div>
   );
 };
