@@ -1,6 +1,7 @@
 "use client"
 
 // import { BlogContentGenerator } from '@/components/BlogContentGenerator'
+import { SettingsForm } from '@/components/SettingsForm'
 import FirstForm from '@/components/FirstForm'
 import React, { useState } from "react";
 import Sidebar from "@/components/ui/sidebar";
@@ -24,6 +25,8 @@ export default function Home() {
       default:
         if (selectedContent=="XXX"){
           return selectedContent
+        } else if (selectedContent=="YYY") {
+          return <SettingsForm />
         } else {
           return <FirstForm />;
         }
