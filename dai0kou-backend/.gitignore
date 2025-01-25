@@ -3,4 +3,4 @@ functions.zip
 *.zip
 ./.terraform
 .terraform/*
-generate_setting/credentials/
+/functions/credentials/*.json
