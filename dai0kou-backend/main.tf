@@ -3,9 +3,18 @@ provider "google" {
   region  = var.region
 }
 
-#--------------------------
-# Resource
-#--------------------------
+#------------------------------------------
+# Resource | Cloud Tasks & Cloud Functions
+#------------------------------------------
+resource "google_cloud_tasks_queue" "task_post_blog" {
+  name     = "task-post-blog"
+  location = var.region
+
+  app_engine_routing_override {
+    service = "default"
+  }
+}
+
 resource "google_storage_bucket" "source_bucket" {
   name          = "${var.project_id}-cloud-functions-source"
   location      = var.region
@@ -18,36 +27,86 @@ resource "google_storage_bucket" "ai_training_data_bucket" {
   force_destroy = true
 }
 
-resource "google_storage_bucket_object" "function_zip" {
-  name   = "function-source.zip"
-  bucket = google_storage_bucket.source_bucket.name
-  source = "${path.module}/functions.zip"
-}
-
-# resource "google_cloudfunctions_function" "cloudrun_generate_content" {
-#   name        = "dai0kou-blog-function"
-#   description = "A simple Python Cloud Function"
-#   runtime     = "python311"
-#   entry_point = "post_blog"
-#   region      = var.region
-
-#   source_archive_bucket = google_storage_bucket.source_bucket.name
-#   source_archive_object = google_storage_bucket_object.function_zip.name
-
-#   trigger_http = true
-
-#   available_memory_mb = 512
-#   timeout = 90
-
-#   depends_on = [
-#     google_storage_bucket_object.function_zip
-#   ]
-
-#   environment_variables = {
-#     ENV_VAR = "example_value"
-#   }
+# IAM (Between cloud functions)
+# resource "google_cloudfunctions_function_iam_member" "invoke_permission" {
+#   project        = google_cloudfunctions_function.task_exec_post.project
+#   region         = google_cloudfunctions_function.task_exec_post.region
+#   cloud_function = google_cloudfunctions_function.task_exec_post.name
+#   role           = "roles/cloudfunctions.invoker"
+#   member         = "allUsers"
 # }
 
+# Functions | Generate Cloud Tasks
+resource "google_storage_bucket_object" "function_zip_generate_task" {
+  name   = "function-src-generate-task.zip"
+  bucket = google_storage_bucket.source_bucket.name
+  source = "${path.module}/functions/generate_task.zip"
+}
+resource "google_cloudfunctions2_function" "function_generate_task" {
+  name        = "dai0kou-function-generate-task"
+  description = "Creates Cloud Tasks when Firestore is triggered"
+  location    = var.region
+  build_config {
+    runtime    = "python311"
+    entry_point = "generate_task"
+    source {
+      storage_source {
+        bucket = google_storage_bucket.source_bucket.name
+        object = google_storage_bucket_object.function_zip_generate_task.name
+      }
+    }
+  }
+  service_config {
+    min_instance_count = 0
+    max_instance_count = 5
+    available_memory   = "256M"
+    environment_variables = {
+      # CLOUD_RUN_URL     = google_cloudfunctions_function.task_exec_post.https_trigger_url
+      # TASK_QUEUE_NAME   = google_cloud_tasks_queue.task_post_blog.name
+      PROJECT_ID        = var.project_id
+      REGION            = var.region
+    }
+  }
+
+  event_trigger {
+    trigger_region = var.region
+    event_type = "google.cloud.firestore.document.v1.written"
+    event_filters {
+      attribute = "database"
+      value = "(default)"
+    }
+    event_filters {
+      attribute = "document"
+      value = "setting_via_project/*"
+      operator = "match-path-pattern"
+    }
+
+  }
+
+  # depends_on = [
+  #   google_cloudfunctions_function.task_exec_post
+  # ]
+}
+
+# Functions | Post(including iam)
+# resource "google_storage_bucket_object" "function_zip_post" {
+#   name   = "function-src-post.zip"
+#   bucket = google_storage_bucket.source_bucket.name
+#   source = "${path.module}/functions/post.zip"
+# }
+# resource "google_cloudfunctions_function" "task_exec_post" {
+#   name        = "task-exec-post"
+#   description = "Processes tasks triggered by Cloud Tasks"
+#   runtime     = "python311"
+#   entry_point = "post_blog"
+#   source_archive_bucket = google_storage_bucket.source_bucket.name
+#   source_archive_object = google_storage_bucket_object.function_zip_post.name
+#   trigger_http          = true
+# }
+
+#------------------------------------------
+# Resource | Cloud Run(API)
+#------------------------------------------
 resource "google_service_account" "cloud_run_service_account" {
   account_id   = "cloud-run-firestore-sa"
   display_name = "Cloud Run Firestore Service Account"
@@ -101,10 +160,3 @@ resource "google_cloud_run_service_iam_member" "all_users_access" {
 resource "random_id" "suffix" {
   byte_length = 4
 }
-
-#--------------------------
-# Output
-#--------------------------
-# output "function_url" {
-#   value = google_cloudfunctions_function.cloudrun_generate_content.https_trigger_url
-# }
