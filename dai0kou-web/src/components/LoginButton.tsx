@@ -11,8 +11,7 @@ export function LoginButton() {
   const handleLogin = async () => {
     setIsLoading(true);
     try {
-      await loginWithGitHub();
-      console.log('accessToekn:', accessToken);
+      await loginWithGitHub()
     } catch (error) {
       console.error(error);
     } finally {
@@ -23,6 +22,8 @@ export function LoginButton() {
   const handleLogout = async () => {
     setIsLoading(true);
     try {
+      console.log('accessToekn:', accessToken);
+      console.log('user :', user)
       await logout();
       console.log('Logout!!!');
     } catch (error) {

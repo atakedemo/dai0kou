@@ -5,6 +5,7 @@ import { SettingsForm } from '@/components/SettingsForm'
 import FirstForm from '@/components/FirstForm'
 import React, { useState } from "react";
 import Sidebar from "@/components/ui/sidebar";
+import { LoginButton } from "@/components/LoginButton"
 
 export default function Home() {
   const [selectedContent, setSelectedContent] = useState<string>("");
@@ -41,6 +42,7 @@ export default function Home() {
 
         {/* メインコンテンツ */}
         <main className="flex-1 p-4">
+          <LoginButton />
           {renderContent()}
         </main>
       </div>

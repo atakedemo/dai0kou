@@ -1,4 +1,4 @@
-import { UseFormRegister, UseFormWatch } from "react-hook-form"
+import { UseFormRegister, UseFormWatch, UseFormSetValue } from "react-hook-form"
 
 export type SettingsFormData = {
     status: string
@@ -20,5 +20,6 @@ export type MarkdownEditordProps = {
 
 export type TabContentFieldProps = {
     register: UseFormRegister<SettingsFormData>,
-    watch: UseFormWatch<SettingsFormData>
+    watch: UseFormWatch<SettingsFormData>,
+    setValue: UseFormSetValue<any>;
 }

@@ -5,17 +5,20 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { useAuth } from '@/contexts/AuthContext';
+import { getIdTokenResult } from 'firebase/auth'
 
-const steps = ['Title', 'Contents', 'Advanced Settings', 'Review']
+const steps = ['Title', 'Sources', 'Advanced Settings', 'Review']
 
 export default function FirstForm() {
+  const { user, loading, accessToken, idToken } = useAuth();
   const [currentStep, setCurrentStep] = useState(0)
   const [formData, setFormData] = useState({
     title: '',
-    contents: [''],
-    advancedSetting1: '',
-    advancedSetting2: '',
-    advancedSettingNumber: 0
+    sources: [''],
+    header: '',
+    footer: '',
+    postDate: ''
   })
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -23,18 +26,45 @@ export default function FirstForm() {
     setFormData(prev => ({ ...prev, [name]: value }))
   }
 
-  const handleContentChange = (index: number, value: string) => {
-    const newContents = [...formData.contents]
-    newContents[index] = value
-    setFormData(prev => ({ ...prev, contents: newContents }))
+  const handleSourceChange = (index: number, value: string) => {
+    const newSources = [...formData.sources]
+    newSources[index] = value
+    setFormData(prev => ({ ...prev, sources: newSources }))
   }
 
-  const addContent = () => {
-    setFormData(prev => ({ ...prev, contents: [...prev.contents, ''] }))
+  const addSource = () => {
+    setFormData(prev => ({ ...prev, sources: [...prev.sources, ''] }))
   }
 
   const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0))
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    console.log('Form submitted:', formData)
+    const body_json = {
+      "user_id":user?.uid,
+      "github_access_token": accessToken,
+      "data": formData
+    }
+    const body_str = JSON.stringify(body_json)
+    console.log('body', body_str)
+    fetch('https://generate-setting-33517488829.asia-northeast1.run.app/add_setting', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'Authorization': 'Bearer ' + idToken
+      },
+      body: body_str,
+      mode: "cors",
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Success:', data)
+    })
+    .catch(error => {
+      console.error('Error:', error)
+    })
+  }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -52,9 +82,9 @@ export default function FirstForm() {
         </ul>
       </div>
 
-      {/* Form content */}
+      {/* Form source */}
       <div className="flex-1 p-8">
-        <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
           {currentStep === 0 && (
             <div>
               <Label htmlFor="title">Title</Label>
@@ -70,50 +100,50 @@ export default function FirstForm() {
 
           {currentStep === 1 && (
             <div className="space-y-4">
-              {formData.contents.map((content, index) => (
+              {formData.sources.map((source, index) => (
                 <div key={index}>
-                  <Label htmlFor={`content-${index}`}>Content {index + 1}</Label>
+                  <Label htmlFor={`source-${index}`}>Source {index + 1}</Label>
                   <Textarea 
-                    id={`content-${index}`}
-                    value={content} 
-                    onChange={(e) => handleContentChange(index, e.target.value)} 
-                    placeholder="Enter content"
+                    id={`source-${index}`}
+                    value={source} 
+                    onChange={(e) => handleSourceChange(index, e.target.value)} 
+                    placeholder="Enter source"
                   />
                 </div>
               ))}
-              <Button type="button" onClick={addContent}>Add Content</Button>
+              <Button type="button" onClick={addSource}>Add Source</Button>
             </div>
           )}
 
           {currentStep === 2 && (
             <div className="space-y-4">
               <div>
-                <Label htmlFor="advancedSetting1">Advanced Setting 1</Label>
+                <Label htmlFor="header">ヘッダー文</Label>
                 <Input 
-                  id="advancedSetting1" 
-                  name="advancedSetting1" 
-                  value={formData.advancedSetting1} 
+                  id="header" 
+                  name="header" 
+                  value={formData.header} 
                   onChange={handleInputChange} 
                   placeholder="Enter advanced setting 1"
                 />
               </div>
               <div>
-                <Label htmlFor="advancedSetting2">Advanced Setting 2</Label>
+                <Label htmlFor="footer">フッター文</Label>
                 <Input 
-                  id="advancedSetting2" 
-                  name="advancedSetting2" 
-                  value={formData.advancedSetting2} 
+                  id="footer" 
+                  name="footer" 
+                  value={formData.footer} 
                   onChange={handleInputChange} 
                   placeholder="Enter advanced setting 2"
                 />
               </div>
               <div>
-                <Label htmlFor="advancedSettingNumber">Advanced Setting Number</Label>
+                <Label htmlFor="postDate">初回投稿日</Label>
                 <Input 
-                  id="advancedSettingNumber" 
-                  name="advancedSettingNumber" 
-                  type="number"
-                  value={formData.advancedSettingNumber} 
+                  id="postDate" 
+                  name="postDate" 
+                  type="date"
+                  value={formData.postDate} 
                   onChange={handleInputChange} 
                   placeholder="Enter a number"
                 />
@@ -126,24 +156,26 @@ export default function FirstForm() {
               <h2 className="text-2xl font-bold">Review Your Submission</h2>
               <p><strong>Title:</strong> {formData.title}</p>
               <div>
-                <strong>Contents:</strong>
+                <strong>Sources:</strong>
                 <ul className="list-disc pl-5">
-                  {formData.contents.map((content, index) => (
-                    <li key={index}>{content}</li>
+                  {formData.sources.map((source, index) => (
+                    <li key={index}>{source}</li>
                   ))}
                 </ul>
               </div>
-              <p><strong>Advanced Setting 1:</strong> {formData.advancedSetting1}</p>
-              <p><strong>Advanced Setting 2:</strong> {formData.advancedSetting2}</p>
-              <p><strong>Advanced Setting Number:</strong> {formData.advancedSettingNumber}</p>
+              <p><strong>ヘッダー文:</strong> {formData.header}</p>
+              <p><strong>フッター文</strong> {formData.footer}</p>
+              <p><strong>初回投稿日</strong> {formData.postDate}</p>
             </div>
           )}
 
           <div className="flex justify-between">
             <Button type="button" onClick={prevStep} disabled={currentStep === 0}>Previous</Button>
-            <Button type="button" onClick={nextStep} disabled={currentStep === steps.length - 1}>
-              {currentStep === steps.length - 1 ? 'Submit' : 'Next'}
-            </Button>
+            {currentStep === steps.length - 1 ? 
+              <Button type="submit" disabled={currentStep === steps.length}>Submit</Button>
+              : 
+              <Button type="button" onClick={nextStep} disabled={currentStep === steps.length - 1}>Next</Button>
+            }
           </div>
         </form>
       </div>

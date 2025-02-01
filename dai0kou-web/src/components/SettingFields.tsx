@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Input } from '@/components/ui/input'
-import ReactMarkdown from 'react-markdown'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { FieldProps, MarkdownEditordProps, TabContentFieldProps } from '@/types/'
+
+import ReactMarkdown from 'react-markdown'
 
 export function FooterField({ register }: FieldProps) {
   return (
@@ -37,22 +38,19 @@ export function PostDateField({ register }: FieldProps) {
   )
 }
 
-export function StatusField({ register }: FieldProps) {
-  return (
-    <div className='space-y-2'>
-      <Label htmlFor='status'>Status</Label>
-      <Input id='status' {...register('status')} />
-    </div>
-  )
-}
-
-export function MarkdownEditor({ register, name, defaultValue = "" }: MarkdownEditordProps) {
+export function MarkdownEditor({ register, name, defaultValue = "", onSave }: MarkdownEditordProps & { onSave?: (content: string) => void }) {
   const [preview, setPreview] = useState(false)
   const [content, setContent] = useState(defaultValue)
 
   useEffect(() => {
     setContent(defaultValue)
   }, [defaultValue])
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave(content)
+    }
+  }
 
   return (
     <div className="space-y-4">
@@ -76,11 +74,14 @@ export function MarkdownEditor({ register, name, defaultValue = "" }: MarkdownEd
           className="min-h-[300px]"
         />
       )}
+      <div className="flex justify-end">
+        <Button onClick={handleSave}>Save</Button>
+      </div>
     </div>
   )
 }
 
-export function TextContentTabs({ register, watch }: TabContentFieldProps) {
+export function TextContentTabs({ register, watch, setValue }: TabContentFieldProps) {
   const [activeTab, setActiveTab] = useState("tab1")
   const [editingTab, setEditingTab] = useState<string | null>(null)
 
@@ -88,6 +89,12 @@ export function TextContentTabs({ register, watch }: TabContentFieldProps) {
 
   const handleEditClick = (tabIndex: string) => {
     setEditingTab(tabIndex)
+  }
+
+  const handleDialogClose = (index: number, updatedContent: string) => {
+    const updatedTabContents = [...tabContents]
+    updatedTabContents[index] = updatedContent
+    setValue("textContent", updatedTabContents)
   }
 
   return (
@@ -104,23 +111,34 @@ export function TextContentTabs({ register, watch }: TabContentFieldProps) {
         {["tab1", "tab2", "tab3", "tab4", "tab5"].map((tab, index) => (
           <TabsContent key={tab} value={tab}>
             <div className="mt-4 space-y-4">
-              <div className="prose max-w-none">
-                {tabContents[index] ? (
-                  <div dangerouslySetInnerHTML={{ __html: tabContents[index] }} />
-                ) : (
-                  <p className="text-muted-foreground">No content yet. Click Edit to add content. {tab}: {index}</p>
-                )
-                }
-              </div>
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button onClick={() => handleEditClick(tab)}>Edit</Button>
-                </DialogTrigger>
+                <Dialog onOpenChange={(isOpen) => {
+                  if (!isOpen && editingTab === `tab${index + 1}`) {
+                    setEditingTab(null)
+                  }
+                }}>
+                  <DialogTrigger asChild>
+                    <Button onClick={() => handleEditClick(tab)}>Edit Content</Button>
+                  </DialogTrigger>
+                <div className="prose max-w-none">
+                  {tabContents[index] ? (
+                    // <div dangerouslySetInnerHTML={{ __html: tabContents[index] }} />
+                    <ReactMarkdown>{ tabContents[index] }</ReactMarkdown>
+                  ) : (
+                    <p className="text-muted-foreground">No content yet. Click Edit to add content. {tab}: {index}</p>
+                  )
+                  }
+                </div>
+              
                 <DialogContent className="max-w-3xl">
                   <DialogHeader>
                     <DialogTitle>Edit Tab {index + 1} Content</DialogTitle>
                   </DialogHeader>
-                  <MarkdownEditor register={register} name={`textContent.${index}`} defaultValue={tabContents[index]} />
+                  <MarkdownEditor
+                    register={register}
+                    name={`textContent.${index}`}
+                    defaultValue={tabContents[index]}
+                    onSave={(updatedContent) => handleDialogClose(index, updatedContent)}
+                  />
                 </DialogContent>
               </Dialog>
             </div>
