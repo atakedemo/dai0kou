@@ -2,3 +2,6 @@ Flask==2.3.3
 firebase-admin
 gunicorn==20.1.0
 uuid
+vertexai
+requests
+flask-cors

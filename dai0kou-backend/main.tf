@@ -6,8 +6,8 @@ provider "google" {
 #------------------------------------------
 # Resource | Cloud Tasks & Cloud Functions
 #------------------------------------------
-resource "google_cloud_tasks_queue" "task_post_blog" {
-  name     = "task-post-blog"
+resource "google_cloud_tasks_queue" "task_post_blogcontent" {
+  name     = "task-post-blogcontent"
   location = var.region
 
   app_engine_routing_override {
@@ -28,13 +28,13 @@ resource "google_storage_bucket" "ai_training_data_bucket" {
 }
 
 # IAM (Between cloud functions)
-# resource "google_cloudfunctions_function_iam_member" "invoke_permission" {
-#   project        = google_cloudfunctions_function.task_exec_post.project
-#   region         = google_cloudfunctions_function.task_exec_post.region
-#   cloud_function = google_cloudfunctions_function.task_exec_post.name
-#   role           = "roles/cloudfunctions.invoker"
-#   member         = "allUsers"
-# }
+resource "google_cloudfunctions_function_iam_member" "invoke_permission" {
+  project        = google_cloudfunctions_function.task_exec_post.project
+  region         = google_cloudfunctions_function.task_exec_post.region
+  cloud_function = google_cloudfunctions_function.task_exec_post.name
+  role           = "roles/cloudfunctions.invoker"
+  member         = "allUsers"
+}
 
 # Functions | Generate Cloud Tasks
 resource "google_storage_bucket_object" "function_zip_generate_task" {
@@ -61,8 +61,8 @@ resource "google_cloudfunctions2_function" "function_generate_task" {
     max_instance_count = 5
     available_memory   = "256M"
     environment_variables = {
-      # CLOUD_RUN_URL     = google_cloudfunctions_function.task_exec_post.https_trigger_url
-      # TASK_QUEUE_NAME   = google_cloud_tasks_queue.task_post_blog.name
+      CLOUD_RUN_URL     = google_cloudfunctions_function.task_exec_post.https_trigger_url
+      TASK_QUEUE_NAME   = google_cloud_tasks_queue.task_post_blogcontent.name
       PROJECT_ID        = var.project_id
       REGION            = var.region
     }
@@ -70,7 +70,7 @@ resource "google_cloudfunctions2_function" "function_generate_task" {
 
   event_trigger {
     trigger_region = var.region
-    event_type = "google.cloud.firestore.document.v1.written"
+    event_type = "google.cloud.firestore.document.v1.created"
     event_filters {
       attribute = "database"
       value = "(default)"
@@ -83,26 +83,28 @@ resource "google_cloudfunctions2_function" "function_generate_task" {
 
   }
 
-  # depends_on = [
-  #   google_cloudfunctions_function.task_exec_post
-  # ]
+  depends_on = [
+    google_cloudfunctions_function.task_exec_post,
+    google_cloud_tasks_queue.task_post_blogcontent
+  ]
 }
 
 # Functions | Post(including iam)
-# resource "google_storage_bucket_object" "function_zip_post" {
-#   name   = "function-src-post.zip"
-#   bucket = google_storage_bucket.source_bucket.name
-#   source = "${path.module}/functions/post.zip"
-# }
-# resource "google_cloudfunctions_function" "task_exec_post" {
-#   name        = "task-exec-post"
-#   description = "Processes tasks triggered by Cloud Tasks"
-#   runtime     = "python311"
-#   entry_point = "post_blog"
-#   source_archive_bucket = google_storage_bucket.source_bucket.name
-#   source_archive_object = google_storage_bucket_object.function_zip_post.name
-#   trigger_http          = true
-# }
+resource "google_storage_bucket_object" "function_zip_post" {
+  name   = "function-src-post.zip"
+  bucket = google_storage_bucket.source_bucket.name
+  source = "${path.module}/functions/post.zip"
+}
+resource "google_cloudfunctions_function" "task_exec_post" {
+  name        = "task-exec-post"
+  description = "Processes tasks triggered by Cloud Tasks"
+  runtime     = "python311"
+  entry_point = "post_blog"
+  source_archive_bucket = google_storage_bucket.source_bucket.name
+  source_archive_object = google_storage_bucket_object.function_zip_post.name
+  trigger_http          = true
+  service_account_email = google_service_account.cloud_run_service_account.email
+}
 
 #------------------------------------------
 # Resource | Cloud Run(API)
@@ -114,15 +116,19 @@ resource "google_service_account" "cloud_run_service_account" {
 
 resource "google_project_iam_binding" "firestore_binding" {
   role    = "roles/datastore.user"
-  members = [
-    "serviceAccount:${google_service_account.cloud_run_service_account.email}"
-  ]
+  members = ["serviceAccount:${google_service_account.cloud_run_service_account.email}"]
   project = var.project_id
+}
+
+resource "google_project_iam_binding" "vertex_ai_binding" {
+  project = var.project_id
+  role    = "roles/aiplatform.user"
+  members = ["serviceAccount:${google_service_account.cloud_run_service_account.email}"]
 }
 
 # Cloud Run サービス
 resource "google_cloud_run_service" "generate_setting" {
-  name     = "firestore-service"
+  name     = "generate-setting"
   location = var.region
 
   template {
@@ -137,7 +143,7 @@ resource "google_cloud_run_service" "generate_setting" {
           container_port = 8080
         }
       }
-      timeout_seconds = 240
+      timeout_seconds = 300
       service_account_name = google_service_account.cloud_run_service_account.email
     }
   }

@@ -27,7 +27,7 @@ def post_zenn(access_token,owner,repo,branch,file_path,content,message):
         
         # post contents
         if sha is not None:
-            body['sha'] = sha   
+            body['sha'] = sha
         put_response = requests.put(url, headers=headers, json=body)
         put_response.raise_for_status()
         put_result = put_response.json()

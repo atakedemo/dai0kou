@@ -2,15 +2,26 @@ from flask import Flask, jsonify, request
 import uuid
 import firebase_admin
 from firebase_admin import auth, credentials, firestore
+import lib.prompt as prompt
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*", "allow_headers": ["Content-Type", "Authorization"]}})
 
 cred = credentials.ApplicationDefault()
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-@app.route('/add_setting', methods=['POST'])
+@app.route('/add_setting', methods=['POST',"OPTIONS"])
 def add_document():
+    if request.method == "OPTIONS":
+        response = jsonify()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        response.status_code = 204
+        return response
+
     try:
         # auth_header = request.headers.get('Authorization')
         data = request.json
@@ -37,10 +48,38 @@ def add_document():
             }
             db.collection('projects_via_user').document(user_id).set(user_data)
         
+        # Generate content & sub-title
+        print("start generation!!!!")
+        sources = document_data["sources"]
+        contents = []
+        for i, source in enumerate(sources):
+            if i == 0:
+                print(f"start ${str(i)}")
+                body = prompt.generateContentsInit(source)
+                sub_title = f"テスト記事 {str(i)}"
+                contents.append({
+                    "body": body,
+                    "sub_title": sub_title
+                })
+            else:
+                print(f"start ${str(i)}")
+                digest = contents[i-1]["body"]
+                sub_title = f"テスト記事 {str(i)}"
+                body = prompt.generateContents(source, i, digest)
+                contents.append({
+                    "body": body,
+                    "sub_title": sub_title
+                })
+        print("finish generation!!!!")
+        document_data["contents"] = contents
+        
         # Add Setting
         db.collection('setting_via_project').document(project_id).set(document_data)
         
-        return jsonify({"message": "Document added successfully"}), 200
+        return jsonify({
+            "message": "Document added successfully!!",
+            "projet_id": project_id
+        }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
