@@ -27,6 +27,7 @@ def add_document():
         data = request.json
         document_data = data.get('data')
         user_id = data.get('user_id')
+        github_access_token = data.get('github_access_token')
         project_id = str(uuid.uuid1())
         
         if not document_data:
@@ -59,7 +60,8 @@ def add_document():
                 sub_title = f"テスト記事 {str(i)}"
                 contents.append({
                     "body": body,
-                    "sub_title": sub_title
+                    "sub_title": sub_title,
+                    "id": project_id + str(i)
                 })
             else:
                 print(f"start ${str(i)}")
@@ -68,10 +70,12 @@ def add_document():
                 body = prompt.generateContents(source, i, digest)
                 contents.append({
                     "body": body,
-                    "sub_title": sub_title
+                    "sub_title": sub_title,
+                    "id": project_id + str(i)
                 })
         print("finish generation!!!!")
         document_data["contents"] = contents
+        document_data["github_access_token"] = github_access_token
         
         # Add Setting
         db.collection('setting_via_project').document(project_id).set(document_data)

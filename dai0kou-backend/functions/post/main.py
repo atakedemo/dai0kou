@@ -23,8 +23,6 @@ def post_blog(request):
     time.sleep(5)
     
     sha = None
-    # url = f'https://api.github.com/repos/{owner}/{repo}/contents/{file_path}'
-    url = 'https://api.github.com/repos/atakedemo/zenn-doc-bamb00/contents/articles/README.md'
     
     try:
         # Get contents data
@@ -41,6 +39,12 @@ def post_blog(request):
         # header = 
         # fotter = 
         # contents = 
+        
+        # Post by Github API
+        file_name = doc_dict["contents"][index]["id"]
+        # url = f'https://api.github.com/repos/{owner}/{repo}/contents/{file_path}'
+        url = f'https://api.github.com/repos/atakedemo/zenn-doc-bamb00/contents/articles/{file_name}.md'
+        access_token = doc_dict["github_access_token"]
 
         headers = {
             'Authorization': f'Bearer {access_token}',
