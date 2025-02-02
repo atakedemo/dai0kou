@@ -7,12 +7,16 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { useAuth } from '@/contexts/AuthContext';
 import { getIdTokenResult } from 'firebase/auth'
+import { useRouter } from 'next/navigation'
 
 const steps = ['Title', 'Sources', 'Advanced Settings', 'Review']
 
 export default function FirstForm() {
   const { user, loading, accessToken, idToken } = useAuth();
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0)
+  const [executing, setExecuting] = useState(false);
+  const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     sources: [''],
@@ -40,34 +44,66 @@ export default function FirstForm() {
   const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0))
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    setExecuting(true);
+    setSuccess(false);
+
     console.log('Form submitted:', formData)
     const body_json = {
       "user_id":user?.uid,
       "github_access_token": accessToken,
       "data": formData
     }
-    const body_str = JSON.stringify(body_json)
-    console.log('body', body_str)
-    fetch('https://generate-setting-33517488829.asia-northeast1.run.app/add_setting', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'Authorization': 'Bearer ' + idToken
-      },
-      body: body_str,
-      mode: "cors",
-    })
-    .then(response => response.json())
-    .then(data => {
-      console.log('Success:', data)
-    })
-    .catch(error => {
-      console.error('Error:', error)
-    })
+    try {
+      const body_str = JSON.stringify(body_json)
+      console.log('body', body_str)
+      fetch('https://generate-setting-33517488829.asia-northeast1.run.app/add_setting', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'Authorization': 'Bearer ' + idToken
+        },
+        body: body_str,
+        mode: "cors",
+      })
+      .then(response => response.json())
+      .then(data => {
+        console.log('Success:', data)
+        setSuccess(true);
+        setExecuting(false);
+      })
+      .catch(error => {
+        console.error('Error:', error)
+      })
+      
+    } catch (error) {
+      console.error('Error:', error);
+    }
   }
 
   return (
     <div className="flex min-h-screen bg-gray-100">
+      {/* ローディングポップアップ */}
+      {executing && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg">
+            <p className="text-lg font-semibold">処理中です...</p>
+          </div>
+        </div>
+      )}
+
+      {/* 完了ポップアップ */}
+      {success && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center">
+            <p className="text-lg font-semibold">送信が完了しました！</p>
+            <Button className="mt-4" onClick={() => {
+              setSuccess(false);
+              router.push('/');
+            }}>トップページへ</Button>
+          </div>
+        </div>
+      )}
+
       {/* Step bar */}
       <div className="w-64 bg-white p-4">
         <ul className="space-y-2">
@@ -171,11 +207,8 @@ export default function FirstForm() {
 
           <div className="flex justify-between">
             <Button type="button" onClick={prevStep} disabled={currentStep === 0}>Previous</Button>
-            {currentStep === steps.length - 1 ? 
-              <Button type="submit" disabled={currentStep === steps.length}>Submit</Button>
-              : 
-              <Button type="button" onClick={nextStep} disabled={currentStep === steps.length - 1}>Next</Button>
-            }
+            {currentStep === steps.length - 1 && <Button type="submit">Submit</Button>}
+            { currentStep !== steps.length - 1 && <Button type="button" onClick={nextStep}>Next</Button>}
           </div>
         </form>
       </div>
