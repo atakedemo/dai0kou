@@ -57,7 +57,7 @@ def add_document():
             if i == 0:
                 print(f"start ${str(i)}")
                 body = prompt.generateContentsInit(source)
-                sub_title = f"テスト記事 {str(i)}"
+                sub_title = prompt.generateSubTitle(body)
                 contents.append({
                     "body": body,
                     "sub_title": sub_title,
@@ -68,6 +68,7 @@ def add_document():
                 digest = contents[i-1]["body"]
                 sub_title = f"テスト記事 {str(i)}"
                 body = prompt.generateContents(source, i, digest)
+                sub_title = prompt.generateSubTitle(body)
                 contents.append({
                     "body": body,
                     "sub_title": sub_title,

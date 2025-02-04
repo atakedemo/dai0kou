@@ -28,6 +28,34 @@ safety_settings = [
     ),
 ]
 
+def generateSubTitle(contents):
+    text = f"""
+    以下内容のブログを書いている
+    二十文字以内でタイトルを作成して
+    {contents}
+    """
+    
+    request = {
+        'contents': [
+            {'role': 'user', 'parts': [text]}
+        ],
+    }
+    vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
+    model = GenerativeModel("gemini-1.5-flash-001",)
+    responses = model.generate_content(
+        [text],
+        generation_config=generation_config,
+        safety_settings=safety_settings,
+        stream=True,
+    )
+
+    print("Generation finished!!!")
+    res_text = ""
+    for response in responses:
+        res_text = res_text + response.text + '\n'
+        
+    return res_text
+
 def generateContents(source, count, digest):
     text = f"""
     以下内容を、わかりやすく説明するブログを作成して
@@ -57,11 +85,11 @@ def generateContents(source, count, digest):
     for response in responses:
         res_text = res_text + response.text + '\n'
         
-    return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
+    return res_text
 
 def generateContentsInit(source):
     text = f"""
-    以下内容を、わかりやすく説明する日本語のブログを作成して
+    以下内容を、噛み砕いてわかりやすく説明する日本語のブログを作成して
     {source}
     """
     print("Generation start!!!")
@@ -85,14 +113,14 @@ def generateContentsInit(source):
     for response in responses:
         res_text = res_text + response.text + '\n'
         
-    return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
-    # return res_text
+    # return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
+    return res_text
 
 def generateContentsFromPdf(file_uri, count, digest):
     text = f"""
-    与えられたファイルの内容を、わかりやすく説明する日本語のブログを作成して
+    与えられたファイルの内容を、噛み砕いてわかりやすく説明する日本語のブログを作成して
 
-    また、これまで{str(count)}回投稿しており、前回の記事で下記内容は投稿済みであることも留意して
+    なお、これまで{str(count)}回投稿しており、前回の記事で下記内容は投稿済みであることも留意して
     {digest}
     """
     print("Generation start!!!")
@@ -113,8 +141,6 @@ def generateContentsFromPdf(file_uri, count, digest):
 
     print("Generation finished!!!")
     
-    # res_json = response.json()
     res_text = response.text
-    
-    return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
-    # return res_text
+    # return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
+    return res_text

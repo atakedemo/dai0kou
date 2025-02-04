@@ -35,10 +35,21 @@ def post_blog(request):
         doc_dict = doc.to_dict()
         
         # Apply blog parts
-        body = doc_dict["contents"][index]["body"]
-        # header = 
-        # fotter = 
-        # contents = 
+        
+        content = f"""---
+title: "{doc_dict["title"]} ~ {doc_dict["contents"][index]["sub_title"]}"
+emoji: "🛠"
+type: "tech" 
+topics: []
+published: true
+---
+{doc_dict["header"]}
+
+{doc_dict["contents"][index]["body"]}
+
+{doc_dict["footer"]}
+        """
+        encode_content = base64.b64encode(content.encode('utf-8')).decode('utf-8')
         
         # Post by Github API
         file_name = doc_dict["contents"][index]["id"]
@@ -51,13 +62,12 @@ def post_blog(request):
             'Content-Type': 'application/vnd.github+json',
             'X-GitHub-Api-Version': '2022-11-28',
         }
-        # encoded_content = base64.b64encode(body.encode('utf-8')).decode('utf-8')
         body = {
             # 'message': message,
             # 'content': content,
             # 'branch': branch
             'message': text,
-            'content': body,
+            'content': encode_content,
             'branch': 'main'
         }
         

@@ -6,8 +6,8 @@ provider "google" {
 #------------------------------------------
 # Resource | Cloud Tasks & Cloud Functions
 #------------------------------------------
-resource "google_cloud_tasks_queue" "task_post_blogcontent" {
-  name     = "task-post-blogcontent"
+resource "google_cloud_tasks_queue" "task_post_webzenn" {
+  name     = "task-post-blogzenn"
   location = var.region
 
   app_engine_routing_override {
@@ -62,7 +62,7 @@ resource "google_cloudfunctions2_function" "function_generate_task" {
     available_memory   = "256M"
     environment_variables = {
       CLOUD_RUN_URL     = google_cloudfunctions_function.task_exec_post.https_trigger_url
-      TASK_QUEUE_NAME   = google_cloud_tasks_queue.task_post_blogcontent.name
+      TASK_QUEUE_NAME   = google_cloud_tasks_queue.task_post_webzenn.name
       PROJECT_ID        = var.project_id
       REGION            = var.region
     }
@@ -85,7 +85,7 @@ resource "google_cloudfunctions2_function" "function_generate_task" {
 
   depends_on = [
     google_cloudfunctions_function.task_exec_post,
-    google_cloud_tasks_queue.task_post_blogcontent
+    google_cloud_tasks_queue.task_post_webzenn
   ]
 }
 
