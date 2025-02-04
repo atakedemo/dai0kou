@@ -9,9 +9,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getIdTokenResult } from 'firebase/auth'
 import { useRouter } from 'next/navigation'
 
+type FirstFormProps = {
+  onSelect: (item: string) => void;
+};
+
 const steps = ['Title', 'Sources', 'Advanced Settings', 'Review']
 
-export default function FirstForm() {
+// const Sidebar: React.FC<SidebarProps> = ({ items, projects, onSelect }) =>
+const FirstForm: React.FC<FirstFormProps> = ({ onSelect }) => {
   const { user, loading, accessToken, idToken } = useAuth();
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(0)
@@ -64,6 +69,7 @@ export default function FirstForm() {
         },
         body: body_str,
         mode: "cors",
+        
       })
       .then(response => response.json())
       .then(data => {
@@ -98,7 +104,8 @@ export default function FirstForm() {
             <p className="text-lg font-semibold">送信が完了しました！</p>
             <Button className="mt-4" onClick={() => {
               setSuccess(false);
-              router.push('/');
+              // router.push('/');
+              onSelect("ホーム")
             }}>トップページへ</Button>
           </div>
         </div>
@@ -215,3 +222,5 @@ export default function FirstForm() {
     </div>
   )
 }
+
+export default FirstForm

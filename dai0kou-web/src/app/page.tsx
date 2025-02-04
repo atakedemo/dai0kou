@@ -22,14 +22,14 @@ export default function Home() {
       case "設定":
         return <p>ここで設定を変更できるんや。</p>;
       case "new_project":
-        return <FirstForm />
+        return <FirstForm onSelect={setSelectedContent} />
       default:
         if (selectedContent=="XXX"){
           return selectedContent
         } else if (selectedContent=="YYY") {
           return <SettingsForm />
         } else {
-          return <FirstForm />;
+          return <p>ホーム画面</p>;
         }
     }
   };
