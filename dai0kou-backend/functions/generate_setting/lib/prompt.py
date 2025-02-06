@@ -1,7 +1,8 @@
 import base64
 import vertexai
 import json
-from vertexai.generative_models import GenerativeModel, Part, SafetySetting
+from vertexai.generative_models import GenerativeModel, Part, SafetySetting, Tool
+from vertexai.preview.generative_models import grounding
 
 generation_config = {
     "max_output_tokens": 8192,
@@ -28,6 +29,7 @@ safety_settings = [
     ),
 ]
 
+
 def generateSubTitle(contents):
     text = f"""
     以下内容のブログを書いている
@@ -42,18 +44,18 @@ def generateSubTitle(contents):
     }
     vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
     model = GenerativeModel("gemini-1.5-flash-001",)
+    
     responses = model.generate_content(
         [text],
         generation_config=generation_config,
         safety_settings=safety_settings,
         stream=True,
     )
-
     print("Generation finished!!!")
     res_text = ""
     for response in responses:
-        res_text = res_text + response.text + '\n'
-        
+        res_text = res_text + response.text
+    
     return res_text
 
 def generateContents(source, count, digest):
@@ -71,8 +73,36 @@ def generateContents(source, count, digest):
             {'role': 'user', 'parts': [text]}
         ],
     }
-    vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
-    model = GenerativeModel("gemini-1.5-flash-001",)
+    # vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
+    # model = GenerativeModel("gemini-1.5-flash-001",)
+    vertexai.init(
+        project="33517488829",
+        location="us-east1",
+        api_endpoint="us-east1-aiplatform.googleapis.com"
+    )
+    tools = [
+        Tool.from_google_search_retrieval(
+            google_search_retrieval=grounding.GoogleSearchRetrieval()
+        ),
+    ]
+    model = GenerativeModel(
+        "projects/33517488829/locations/us-east1/endpoints/7247149419508793344",
+        tools=tools,
+        system_instruction=["""あなたはブログ投稿を行う作者です。与えられた情報の要約だけでなく、専門家として、技術の本番活用に向けた考察を加えてください"""]
+    )
+    
+    responses = model.generate_content(
+        [text],
+        generation_config=generation_config,
+        safety_settings=safety_settings,
+        stream=True,
+    )
+    
+    print("Generation finished!!!")
+    res_text = ""
+    for response in responses:
+        res_text = res_text + response.text
+
     responses = model.generate_content(
         [text],
         generation_config=generation_config,
@@ -99,19 +129,35 @@ def generateContentsInit(source):
             {'role': 'user', 'parts': [text]}
         ],
     }
-    vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
-    model = GenerativeModel("gemini-1.5-flash-001",)
+    # vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
+    # model = GenerativeModel("gemini-1.5-flash-001",)
+    vertexai.init(
+        project="33517488829",
+        location="us-east1",
+        api_endpoint="us-east1-aiplatform.googleapis.com"
+    )
+    tools = [
+        Tool.from_google_search_retrieval(
+            google_search_retrieval=grounding.GoogleSearchRetrieval()
+        ),
+    ]
+    model = GenerativeModel(
+        "projects/33517488829/locations/us-east1/endpoints/7247149419508793344",
+        tools=tools,
+        system_instruction=["""あなたはブログ投稿を行う作者です。与えられた情報の要約だけでなく、専門家として、技術の本番活用に向けた考察を加えてください"""]
+    )
+    
     responses = model.generate_content(
         [text],
         generation_config=generation_config,
         safety_settings=safety_settings,
         stream=True,
     )
-
+    
     print("Generation finished!!!")
     res_text = ""
     for response in responses:
-        res_text = res_text + response.text + '\n'
+        res_text = res_text + response.text
         
     # return base64.b64encode(res_text.encode('utf-8')).decode('utf-8')
     return res_text
