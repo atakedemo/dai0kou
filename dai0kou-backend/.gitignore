@@ -4,3 +4,5 @@ functions.zip
 ./.terraform
 .terraform/*
 /functions/credentials/*.json
+*.tfvars
+terraform.tfvars
