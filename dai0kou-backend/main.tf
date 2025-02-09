@@ -6,8 +6,8 @@ provider "google" {
 #------------------------------------------
 # Resource | Cloud Tasks & Cloud Functions
 #------------------------------------------
-resource "google_cloud_tasks_queue" "task_post_webzenn" {
-  name     = "task-post-blogzenn"
+resource "google_cloud_tasks_queue" "task_post_dai0kou_v0_8" {
+  name     = "task-post-dai0kou-blog-v-0-8"
   location = var.region
 
   app_engine_routing_override {
@@ -62,7 +62,7 @@ resource "google_cloudfunctions2_function" "function_generate_task" {
     available_memory   = "256M"
     environment_variables = {
       CLOUD_RUN_URL     = google_cloudfunctions_function.task_exec_post.https_trigger_url
-      TASK_QUEUE_NAME   = google_cloud_tasks_queue.task_post_webzenn.name
+      TASK_QUEUE_NAME   = google_cloud_tasks_queue.task_post_dai0kou_v0_8.name
       PROJECT_ID        = var.project_id
       REGION            = var.region
     }
@@ -85,7 +85,7 @@ resource "google_cloudfunctions2_function" "function_generate_task" {
 
   depends_on = [
     google_cloudfunctions_function.task_exec_post,
-    google_cloud_tasks_queue.task_post_webzenn
+    google_cloud_tasks_queue.task_post_dai0kou_v0_8
   ]
 }
 
@@ -104,6 +104,15 @@ resource "google_cloudfunctions_function" "task_exec_post" {
   source_archive_object = google_storage_bucket_object.function_zip_post.name
   trigger_http          = true
   service_account_email = google_service_account.cloud_run_service_account.email
+  available_memory_mb   = 512
+  timeout               = 90
+  environment_variables = {
+    X_CONSUMER_KEY = var.x_consumer_key
+    X_CONSUMER_SECRET = var.x_consumer_secret
+    X_ACCESS_TOKEN = var.x_access_token
+    X_ACCESS_TOKEN_SECRET = var.x_access_token_secret
+    X_BEARER_TOKEN = var.x_bearer_token
+  }
 }
 
 #------------------------------------------

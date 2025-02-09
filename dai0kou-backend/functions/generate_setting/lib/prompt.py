@@ -73,8 +73,6 @@ def generateContents(source, count, digest):
             {'role': 'user', 'parts': [text]}
         ],
     }
-    # vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
-    # model = GenerativeModel("gemini-1.5-flash-001",)
     vertexai.init(
         project="33517488829",
         location="us-east1",
@@ -88,7 +86,7 @@ def generateContents(source, count, digest):
     model = GenerativeModel(
         "projects/33517488829/locations/us-east1/endpoints/7247149419508793344",
         tools=tools,
-        system_instruction=["""あなたはブログ投稿を行う作者です。与えられた情報の要約だけでなく、専門家として、技術の本番活用に向けた考察を加えてください"""]
+        system_instruction=["""あなたはブログ投稿を行う作者です。与えられた情報の要約だけでなく、専門家として、技術の活用に向けた考察を加えてください"""]
     )
     
     responses = model.generate_content(
@@ -129,8 +127,6 @@ def generateContentsInit(source):
             {'role': 'user', 'parts': [text]}
         ],
     }
-    # vertexai.init(project="ai-agent-bamb00", location="asia-northeast1")
-    # model = GenerativeModel("gemini-1.5-flash-001",)
     vertexai.init(
         project="33517488829",
         location="us-east1",
@@ -144,7 +140,7 @@ def generateContentsInit(source):
     model = GenerativeModel(
         "projects/33517488829/locations/us-east1/endpoints/7247149419508793344",
         tools=tools,
-        system_instruction=["""あなたはブログ投稿を行う作者です。与えられた情報の要約だけでなく、専門家として、技術の本番活用に向けた考察を加えてください"""]
+        system_instruction=["""あなたはブログ投稿を行う作者です。与えられた情報の要約だけでなく、専門家として、技術の活用に向けた考察を加えてください"""]
     )
     
     responses = model.generate_content(

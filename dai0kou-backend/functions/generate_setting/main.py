@@ -61,7 +61,8 @@ def add_document():
                 contents.append({
                     "body": body,
                     "sub_title": sub_title,
-                    "id": project_id + str(i)
+                    "id": project_id + str(i),
+                    "owner": user_id
                 })
             else:
                 print(f"start ${str(i)}")
@@ -72,7 +73,8 @@ def add_document():
                 contents.append({
                     "body": body,
                     "sub_title": sub_title,
-                    "id": project_id + str(i)
+                    "id": project_id + str(i),
+                    "owner": user_id
                 })
         print("finish generation!!!!")
         document_data["contents"] = contents
