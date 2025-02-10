@@ -202,7 +202,9 @@ const FirstForm: React.FC<FirstFormProps> = ({ onSelect }) => {
                 <strong>Sources:</strong>
                 <ul className="list-disc pl-5">
                   {formData.sources.map((source, index) => (
-                    <li key={index}>{source}</li>
+                    <li key={index}>
+                      {source.length > 150 ? source.slice(0, 30) + '...' : source}
+                    </li>
                   ))}
                 </ul>
               </div>
