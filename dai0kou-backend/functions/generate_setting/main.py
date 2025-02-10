@@ -54,28 +54,15 @@ def add_document():
         sources = document_data["sources"]
         contents = []
         for i, source in enumerate(sources):
-            if i == 0:
-                print(f"start ${str(i)}")
-                body = prompt.generateContentsInit(source)
-                sub_title = prompt.generateSubTitle(body)
-                contents.append({
-                    "body": body,
-                    "sub_title": sub_title,
-                    "id": project_id + str(i),
-                    "owner": user_id
-                })
-            else:
-                print(f"start ${str(i)}")
-                digest = contents[i-1]["body"]
-                sub_title = f"テスト記事 {str(i)}"
-                body = prompt.generateContents(source, i, digest)
-                sub_title = prompt.generateSubTitle(body)
-                contents.append({
-                    "body": body,
-                    "sub_title": sub_title,
-                    "id": project_id + str(i),
-                    "owner": user_id
-                })
+            print(f"start ${str(i)}")
+            body = prompt.generateContentsInit(source)
+            sub_title = prompt.generateSubTitle(body)
+            contents.append({
+                "body": body,
+                "sub_title": sub_title,
+                "id": project_id + str(i),
+                "owner": user_id
+            })
         print("finish generation!!!!")
         document_data["contents"] = contents
         document_data["github_access_token"] = github_access_token
