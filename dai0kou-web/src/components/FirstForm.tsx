@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -19,7 +19,10 @@ const steps = ['Title', 'Sources', 'Advanced Settings', 'Review']
 const FirstForm: React.FC<FirstFormProps> = ({ onSelect }) => {
   const { user, loading, accessToken, idToken } = useAuth();
   const router = useRouter();
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showRepoModal, setShowRepoModal] = useState(false);
+  const [repositories, setRepositories] = useState<string[]>([]);
+  const [selectedRepo, setSelectedRepo] = useState('');
   const [executing, setExecuting] = useState(false);
   const [success, setSuccess] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,6 +32,22 @@ const FirstForm: React.FC<FirstFormProps> = ({ onSelect }) => {
     footer: '',
     postDate: ''
   })
+
+  useEffect(() => {
+    if (showRepoModal && accessToken) {
+      fetch("https://api.github.com/user/repos?sort=created&direction=desc", {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      })
+        .then(response => response.json())
+        .then(data => {
+          setRepositories(data.map((repo: any) => repo.full_name));
+        })
+        .catch(error => console.error("GitHubリポジトリの取得に失敗", error));
+    }
+  }, [showRepoModal, accessToken]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -45,49 +64,60 @@ const FirstForm: React.FC<FirstFormProps> = ({ onSelect }) => {
     setFormData(prev => ({ ...prev, sources: [...prev.sources, ''] }))
   }
 
-  const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))
-  const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 0))
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
+  const handleSubmit = () => {
     setExecuting(true);
     setSuccess(false);
 
-    console.log('Form submitted:', formData)
-    const body_json = {
-      "user_id":user?.uid,
+    let body_json = {
+      "user_id": user?.uid,
       "github_access_token": accessToken,
+      "repository": selectedRepo,
       "data": formData
-    }
-    try {
-      const body_str = JSON.stringify(body_json)
-      console.log('body', body_str)
-      fetch('https://generate-setting-33517488829.asia-northeast1.run.app/add_setting', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          'Authorization': 'Bearer ' + idToken
-        },
-        body: body_str,
-        mode: "cors",
-        
-      })
-      .then(response => response.json())
-      .then(data => {
-        console.log('Success:', data)
-        setSuccess(true);
-        setExecuting(false);
-      })
-      .catch(error => {
-        console.error('Error:', error)
-      })
-      
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  }
+    };
+
+    fetch('https://generate-setting-33517488829.asia-northeast1.run.app/add_setting', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      },
+      body: JSON.stringify(body_json),
+      mode: "cors",
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('Success:', data);
+      setSuccess(true);
+      setExecuting(false);
+    })
+    .catch(error => console.error('Error:', error));
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
+      {/* GitHubリポジトリ選択モーダル */}
+      {showRepoModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
+            <h2 className="text-lg font-semibold">GitHubリポジトリを選択</h2>
+            <select 
+              className="w-full p-2 border rounded my-4" 
+              value={selectedRepo} 
+              onChange={(e) => setSelectedRepo(e.target.value)}
+            >
+              <option value="">リポジトリを選択してください</option>
+              {repositories.map(repo => (
+                <option key={repo} value={repo}>{repo}</option>
+              ))}
+            </select>
+            <div className="flex justify-between">
+              <Button onClick={() => setShowRepoModal(false)}>キャンセル</Button>
+              <Button onClick={() => { setShowRepoModal(false); handleSubmit(); }}>実行</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ローディングポップアップ */}
       {executing && (
         <div className="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 z-50">
@@ -127,7 +157,7 @@ const FirstForm: React.FC<FirstFormProps> = ({ onSelect }) => {
 
       {/* Form source */}
       <div className="flex-1 p-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); setShowRepoModal(true); }} className="space-y-6">
           {currentStep === 0 && (
             <div>
               <Label htmlFor="title">Title</Label>
@@ -215,9 +245,9 @@ const FirstForm: React.FC<FirstFormProps> = ({ onSelect }) => {
           )}
 
           <div className="flex justify-between">
-            <Button type="button" onClick={prevStep} disabled={currentStep === 0}>Previous</Button>
+            <Button type="button" onClick={() => setCurrentStep(prev => Math.max(prev - 1, 0))} disabled={currentStep === 0}>Previous</Button>
             {currentStep === steps.length - 1 && <Button type="submit">Submit</Button>}
-            { currentStep !== steps.length - 1 && <Button type="button" onClick={nextStep}>Next</Button>}
+            {currentStep !== steps.length - 1 && <Button type="button" onClick={() => setCurrentStep(prev => Math.min(prev + 1, steps.length - 1))}>Next</Button>}
           </div>
         </form>
       </div>

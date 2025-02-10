@@ -1,6 +1,7 @@
-# dai0kou
+# 第ゼロ稿
 
-第ゼロ稿。GCP AIエージェントハッカソンに向けて作成
+GCP AIエージェントハッカソンに向けて作成
+テック系の情報について勝手に投稿と告知をしてくれるAIエージェント
 
 ## 解説記事
 
@@ -8,17 +9,33 @@ https://zenn.dev/bamb00eth/articles/20250210gcphackathon
 
 ## ディレクトリ構成
 
+```
+dai0kou
+├── dai0kou-backend             --- バックエンドのリソース
+│   └── functions               --- 
+│       ├── credentials         --- Firebaseの認証情報
+│       ├── generate_setting    --- バックエンドロジック①｜投稿設定の作成
+│       ├── generate_task       --- バックエンドロジック②｜下記③のタスク作成
+│       └── post                --- バックエンドロジック③｜ブログ投稿＆XでのPost
+└── dai0kou-web                 --- デモ用Webアプリ
+  　 ├── public
+   　└── src
+```
+
 ## デモ環境立ち上げ手順
 
 ### 1.Zennと連携したGithubリポジトリの用意
 
+[ZennとGithubを連携する方法](https://zenn.dev/eguchi244_dev/articles/github-zenn-linkage-20230501)に沿って、リポジトリの作成とZennアカウントとの紐付けを行う
+
 注意点
 
-* ディレクトリ名は** "zenn-doc-bamb00" と**する
-* デフォルトのブランチは** "main" **とする
-* **"articles" **といった名称のフォルダを作成する
+* デフォルトのブランチは **"main"** とする
+* **"articles"** といった名称のフォルダを作成する
 
 ### 2.ローカル環境でのWebアプリ立ち上げ
+
+Next.jsで構築されたWebアプリを起動する
 
 ```bash
 cd dai0kou-web

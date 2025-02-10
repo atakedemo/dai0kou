@@ -88,9 +88,9 @@ published: true
         encode_content = base64.b64encode(content.encode('utf-8')).decode('utf-8')
         
         # Post by Github API
+        repository = doc_dict["repository"]
         file_name = doc_dict["contents"][index]["id"]
-        # url = f'https://api.github.com/repos/{owner}/{repo}/contents/{file_path}'
-        url = f'https://api.github.com/repos/atakedemo/zenn-doc-bamb00/contents/articles/{file_name}.md'
+        url = f'https://api.github.com/repos/{repository}/contents/articles/{file_name}.md'
         access_token = doc_dict["github_access_token"]
 
         headers = {
