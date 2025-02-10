@@ -1,8 +1,0 @@
-project_id = "ai-agent-bamb00"
-region     = "asia-northeast1"
-container_image = "gcr.io/ai-agent-bamb00/dai0kou-function-create-setting:latest"
-x_consumer_key = "tkBTjgBLemUdJDWqRDgbNRV3k"
-x_consumer_secret = "Hg9LIm08cEKD74coLh0S2SWIn1bPdPeLLG2RNz0mYA9UsyeP9M"
-x_access_token = "1239594713516130305-YtGRz7UBGOQ4mK0mnfJG3CcbaTKUhO"
-x_access_token_secret = "chzCC5hjBune3i3IQEePZ0i7GTZO5i2ftIGWfS0NJ52mm"
-x_bearer_token = "AAAAAAAAAAAAAAAAAAAAAJIcyAEAAAAA4co4LfVBU1Wje4YUIE%2BVHpNXH1I%3DVgXUzoQzmwfoZuUnQRUnOFjYcxqpcuqmVDhgrLtiS1HUUwTekF"
