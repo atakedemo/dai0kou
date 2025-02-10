@@ -28,6 +28,7 @@ def add_document():
         document_data = data.get('data')
         user_id = data.get('user_id')
         github_access_token = data.get('github_access_token')
+        repository = data.get('repository')
         project_id = str(uuid.uuid1())
         
         if not document_data:
@@ -66,6 +67,7 @@ def add_document():
         print("finish generation!!!!")
         document_data["contents"] = contents
         document_data["github_access_token"] = github_access_token
+        document_data["repository"] = repository
         
         # Add Setting
         db.collection('setting_via_project').document(project_id).set(document_data)

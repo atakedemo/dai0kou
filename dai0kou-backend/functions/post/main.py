@@ -132,7 +132,7 @@ published: true
         post_content = f" {post_body} https://zenn.dev/bamb00eth/articles/{file_name}"
         print('Post content ---')
         print(post_content)
-        post_x(post_content)
+        result_x = post_x(post_content)
         
         return response
     except requests.exceptions.RequestException as e:
@@ -154,6 +154,7 @@ def post_x(post_content):
     )
 
     client.create_tweet(text=post_content)
+    return 'OK'
 
 def generate_post(contents):
     text = f"""
