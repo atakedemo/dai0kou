@@ -6,3 +6,5 @@ functions.zip
 /functions/credentials/*.json
 *.tfvars
 terraform.tfvars
+./terraform.tfvars
+./*.tfvars
